@@ -1,45 +1,30 @@
 """
 Declaration of a class corresponding to the data stored in the token for a prayer
+
+by John McGuinness, 2017
 """
 
 from __future__ import print_function
 import struct
 
 
-PRAYER_TYPE_MAPPING={
-    'Rosary': 'r'
-    }
-
-MYSTERY_MAPPING={
-    'Joyful':'j',
-    'Sorrowful':'s',
-    'Glorious':'g',
-    'Luminous':'l'
-}
-
-PRAYER_MAPPING={
-    'Creed':'c',
-    'Our Father':'o',
-    'Hail Mary':'h',
-    'Glory Be':'g',
-    'Fatima Prayer':'f',
-    'Hail Holy Queen':'q'
-}
 
 AUDIO_MAPPING={
+    'SignOfTheCross':'https://s3.amazonaws.com/rosary-files/audio/prayers/SignOfTheCross',
     'Creed':'https://s3.amazonaws.com/rosary-files/audio/prayers/Creed',
     'Our Father':'https://s3.amazonaws.com/rosary-files/audio/prayers/Our+Father',
     'Hail Mary':'https://s3.amazonaws.com/rosary-files/audio/prayers/Hail+Mary',
     'Glory Be':'https://s3.amazonaws.com/rosary-files/audio/prayers/Glory+Be',
     'Fatima Prayer':'https://s3.amazonaws.com/rosary-files/audio/prayers/Fatima+Prayer',
-    'Hail Holy Queen':'https://s3.amazonaws.com/rosary-files/audio/prayers/Hail+Holy+Queen'
+    'Hail Holy Queen':'https://s3.amazonaws.com/rosary-files/audio/prayers/Hail+Holy+Queen',
+    'ClosingPrayer':'https://s3.amazonaws.com/rosary-files/audio/prayers/ClosingPrayer'
     }
 
-FORMAT='15p15p15pll'
+FORMAT='15p15p20pll'
 
 class TokenData:
     prayer_type='Rosary'
-    mysteries='Joyful'
+    mysteries='joyful'
     prayer='Creed'
     decade=0
     counter=0
@@ -61,7 +46,10 @@ class TokenData:
         return self(parts[0],parts[1],parts[2],parts[3],parts[4])
 
     def get_audio(self):
-        return AUDIO_MAPPING[self.prayer]
+        if self.prayer=='Mystery':
+            return 'https://s3.amazonaws.com/rosary-files/audio/mysteries/' + self.mysteries + '/' + str(self.decade)
+        else:
+            return AUDIO_MAPPING[self.prayer]
 
     def get_token(self):
         return struct.pack(FORMAT, self.prayer_type,
@@ -75,18 +63,31 @@ class TokenData:
             return self._get_next_rosary()
 
     def _get_next_rosary(self):
-        if self.prayer=='Hail Holy Queen':
-            return {}
 
         prayer_type=self.prayer_type
         mysteries=self.mysteries
         prayer=self.prayer
         counter=self.counter+1
         decade=self.decade
+
+        if self.prayer=='SignOfTheCross':
+            if (self.decade == 0):
+                prayer='Creed'
+            else:
+                return {}
         
+        if self.prayer=='Hail Holy Queen':
+            prayer='ClosingPrayer'
+
+        if self.prayer=='ClosingPrayer':
+            prayer='SignOfTheCross'
+            
         if self.prayer=='Creed':
             prayer='Our Father';            
 
+        elif self.prayer=='Mystery':
+            prayer='Our Father'
+            
         elif self.prayer=='Our Father':
             prayer='Hail Mary'
 
@@ -101,7 +102,7 @@ class TokenData:
             if self.decade == 5:
                 prayer='Hail Holy Queen'
             else:
-                prayer='Our Father'
+                prayer='Mystery'
                 decade += 1
                 print('Incremented decade to' + str(decade))
 

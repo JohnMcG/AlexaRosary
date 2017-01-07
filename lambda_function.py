@@ -1,6 +1,8 @@
 """
 This is an AWS Lambda function to handle an Echo skill to pray the rosary
 from a local zip file with a library
+
+by John McGuinness, 2017
 """
 
 from __future__ import print_function
@@ -8,6 +10,17 @@ from token_data import TokenData
 from datetime import date
 import calendar
 import dateutil.parser
+
+
+MYSTERIES = {
+    'sunday' : 'glorious',
+    'monday' : 'joyful',
+    'tuesday' : 'sorrowful',
+    'wednesday' : 'glorious',
+    'thursday' : 'luminous',
+    'friday' : 'sorrowful',
+    'saturday' : 'joyful'
+    }
 
 
 # --------------- Helpers that build all of the responses ----------------------
@@ -40,20 +53,24 @@ def build_response(session_attributes, speechlet_response):
         'response': speechlet_response
     }
 
+def get_farewell_response():
+    return build_response({}, build_speechlet_response(
+        'Rosary', 'goodbye', '', 'goodbye',
+        True))
 
-def build_pray_response():
-    print ("Sending response")
+def build_pray_response(mysteries):
+    print ("Sending response for " + mysteries + " mysteries.")
     session_attributes = {}
-    currentData = TokenData('Rosary','Joyful','Creed',0,0)
+    currentData = TokenData('Rosary',mysteries,'SignOfTheCross',0,0)
     return build_response(session_attributes, {
         'outputSpeech': {
             'type': 'PlainText',
-            'text': "Beginning the rosary"
+            'text': 'Beginning the ' + mysteries + ' mysteries of the rosary'
         },
         'card': {
             'type': 'Simple',
-            'title': "Rosary - playing",
-            'content': "Rosary -  playing"
+            'title': mysteries + ' mysteries of the Rosary',
+            'content': mysteries + ' mysteries of the Rosary'
         },
         'reprompt': {            
         },
@@ -89,23 +106,17 @@ def get_welcome_response(timestamp):
     day_name = calendar.day_name[my_date.weekday()]
     session_attributes = {}
     card_title = "Welcome"
-    speech_output = "Today is " + day_name + ". Shall I begin?"
-    reprompt_text = "Shall I begin?"
+    speech_output = "What day is it?"
+    reprompt_text = "What day is it?"
 
     should_end_session = False
     return build_response(session_attributes, build_speechlet_response(
-        card_title, speech_output, reprompt_text, timestamp + " " + speech_output,
+        card_title, speech_output, reprompt_text, speech_output,
         should_end_session))
 
 
 
 # --------------- Events ------------------
-
-def on_session_started(session_started_request, session):
-    """ Called when the session starts """
-
-    print("on_session_started requestId=" + session_started_request['requestId']
-          + ", sessionId=" + session['sessionId'])
 
 
 def on_launch(launch_request, session):
@@ -129,9 +140,16 @@ def on_intent(intent_request, session):
     intent = intent_request['intent']
     intent_name = intent_request['intent']['name']
 
+    print("intent: " + intent_name)
+
+    
     # Dispatch to your skill's intent handlers
-    if intent_name == "Pray":
-        return build_pray_response()
+    if intent_name == "No":
+        return get_farewell_response()
+    elif intent_name == "ForDay":
+         return build_pray_response(MYSTERIES[intent['slots']['day']['value'].lower()])
+    elif intent_name == "ForMysteries":
+        return build_pray_response(intent['slots']['mysteries']['value'].lower().encode('utf8'))
     else:
         raise ValueError("Invalid intent")
 
@@ -250,21 +268,16 @@ def lambda_handler(event, context):
     """ Route the incoming request based on type (LaunchRequest, IntentRequest,
     etc.) The JSON body of the request is provided in the event parameter.
     """
-#    print("event.session.application.applicationId=" +
-#          event['session']['application']['applicationId'])
 
     """
     Uncomment this if statement and populate with your skill's application ID to
     prevent someone else from configuring a skill that sends requests to this
     function.
     """
-    # if (event['session']['application']['applicationId'] !=
-    #         "amzn1.echo-sdk-ams.app.[unique-value-here]"):
-    #     raise ValueError("Invalid Application ID")
+    if (event.has_key('session') and event['session']['application']['applicationId'] !=
+             "amzn1.ask.skill.43e06ff9-fe37-4785-ad97-76508f4a2896"):
+         raise ValueError("Invalid Application ID")
 
-#    if event['session']['new']:
-#        on_session_started({'requestId': event['request']['requestId']},
-#                           event['session'])
 
     print("Processing event: " + event['request']['requestId']
           + ": " + event['request']['type']);
