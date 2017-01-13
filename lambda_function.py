@@ -106,8 +106,8 @@ def get_welcome_response(timestamp):
     day_name = calendar.day_name[my_date.weekday()]
     session_attributes = {}
     card_title = "Welcome"
-    speech_output = "What day is it?"
-    reprompt_text = "What day is it?"
+    speech_output = "What day of the week is it?"
+    reprompt_text = "What day of the week is it?"
 
     should_end_session = False
     return build_response(session_attributes, build_speechlet_response(
@@ -131,7 +131,7 @@ def on_launch(launch_request, session):
     return get_welcome_response(launch_request["timestamp"])
 
 
-def on_intent(intent_request, session):
+def on_intent(intent_request, session, context):
     """ Called when the user specifies an intent for this skill """
 
     print("on_intent requestId=" + intent_request['requestId'] +
@@ -142,6 +142,7 @@ def on_intent(intent_request, session):
 
     print("intent: " + intent_name)
 
+    token=context['AudioPlayer']['token']
     
     # Dispatch to your skill's intent handlers
     if intent_name == "No":
@@ -150,6 +151,14 @@ def on_intent(intent_request, session):
          return build_pray_response(MYSTERIES[intent['slots']['day']['value'].lower()])
     elif intent_name == "ForMysteries":
         return build_pray_response(intent['slots']['mysteries']['value'].lower().encode('utf8'))
+    elif intent_name == "AMAZON.ResumeIntent":
+        return play_current(token, context['AudioPlayer']['offsetInMilliseconds'])
+    elif intent_name == "AMAZON.PauseIntent":
+        return playback_stop()
+    elif intent_name == "AMAZON.NextIntent":
+        return play_next(token, 'REPLACE_ALL', None)
+    elif intent_name == "AMAZON.PreviousIntent":
+        return play_current(token, 0)
     else:
         raise ValueError("Invalid intent")
 
@@ -191,6 +200,9 @@ def build_empty_response():
 def on_playback_nearly_finished(nearly_finished_request):
     print("playing next prayer")
     token = nearly_finished_request['token']
+    return play_next(token, 'ENQUEUE', token)
+
+def play_next(token, playBehavior, expectedPrevious):
     current_data = TokenData.from_token(token)
     next_data = current_data.get_next()
     if next_data:
@@ -200,13 +212,13 @@ def on_playback_nearly_finished(nearly_finished_request):
                'directives': [
                    {
                        'type': 'AudioPlayer.Play',
-                       'playBehavior': 'ENQUEUE',
+                       'playBehavior': playBehavior,
                        'audioItem': {
                            'stream': {
                                'token': next_data.get_token(),
                                'url': next_data.get_audio(),
                                'offsetInMilliseconds': 0,
-                               'expectedPreviousToken': token
+                               'expectedPreviousToken': expectedPrevious
                            }
                        }
                    }
@@ -216,10 +228,23 @@ def on_playback_nearly_finished(nearly_finished_request):
     else:
         print ("Finishing")
         return build_empty_response();
-   
+
+def on_next_command(play_request, context):
+    print("Advancing")
+    token = context['AudioPlayer']['token']
+    return play_next(token, 'REPLACE_ALL', None)
+
+def on_previous_command(play_request, context):
+    print("Going back")
+    token=context['AudioPlayer']['token']
+    return play_current(token, 0)
+
 def on_play_command(play_request, context):
     print("Resuming prayer")
     token = context['AudioPlayer']['token']
+    return play_current(token, context['AudioPlayer']['offsetInMilliseconds'])
+
+def play_current(token, offset):
     current_data = TokenData.from_token(token)
     return {
         'version': '1.0',
@@ -232,7 +257,7 @@ def on_play_command(play_request, context):
                         'stream': {
                             'token': current_data.get_token(),
                             'url': current_data.get_audio(),
-                            'offsetInMilliseconds': context['AudioPlayer']['offsetInMilliseconds'],
+                            'offsetInMilliseconds': offset
                         }
                     }
                 }
@@ -244,6 +269,9 @@ def on_play_command(play_request, context):
 def on_playback_failed(request):
     print ("Playback failed: " + request['error']['type']
            + ":" + request['error']['message'])
+    return playback_stop()
+
+def playback_stop():
     return {
         'version': '1.0',
         'response': {
@@ -285,7 +313,7 @@ def lambda_handler(event, context):
     if event['request']['type'] == "LaunchRequest":
         return on_launch(event['request'], event['session'])
     elif event['request']['type'] == "IntentRequest":
-        return on_intent(event['request'], event['session'])
+        return on_intent(event['request'], event['session'], event['context'])
     elif event['request']['type'] == "SessionEndedRequest":
         return on_session_ended(event['request'], event['session'])
     elif event['request']['type'] == "AudioPlayer.PlaybackNearlyFinished":
@@ -302,6 +330,10 @@ def lambda_handler(event, context):
         return on_playback_failed(event['request'])
     elif event['request']['type'] == "PlaybackController.PlayCommandIssued":
         return on_play_command(event['request'], event['context'])
+    elif event['request']['type'] == "PlaybackController.NextCommandIssued":
+        return on_next_command(event['request'], event['context'])
+    elif event['request']['type'] == "PlaybackController.PreviousCommandIssued":
+        return on_previous_command(event['request'], event['context'])
     elif event['request']['type'] == "System.ExceptionEncountered":
         handle_exception(event['request'])
 
