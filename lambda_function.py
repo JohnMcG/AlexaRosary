@@ -114,6 +114,15 @@ def get_welcome_response(timestamp):
         card_title, speech_output, reprompt_text, speech_output,
         should_end_session))
 
+def build_empty_response():
+    return {
+        "version": "1.0",
+        "sessionAttributes": {},
+        "response": {
+        "shouldEndSession": True
+        }
+    }
+
 
 
 # --------------- Events ------------------
@@ -189,15 +198,6 @@ def on_playback_stopped(stopped_request):
     return build_empty_response()
 
 
-
-def build_empty_response():
-    return {
-        "version": "1.0",
-        "sessionAttributes": {},
-        "response": {
-        "shouldEndSession": True
-        }
-    }
 
 def on_playback_nearly_finished(nearly_finished_request):
     print("playing next prayer")
@@ -324,8 +324,6 @@ def lambda_handler(event, context):
         return on_playback_started(event['request'])
     elif event['request']['type'] == "AudioPlayer.PlaybackFinished":
         return on_playback_finished(event['request'])
-    elif event['request']['type'] == "AudioPlayer.PlaybackStopped":
-        return on_playback_stopped(event['request'])
     elif event['request']['type'] == "AudioPlayer.PlaybackStopped":
         return on_playback_stopped(event['request'])
     elif event['request']['type'] == "AudioPlayer.PlaybackFailed":
