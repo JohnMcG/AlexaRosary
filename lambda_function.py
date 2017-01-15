@@ -142,7 +142,6 @@ def on_intent(intent_request, session, context):
 
     print("intent: " + intent_name)
 
-    token=context['AudioPlayer']['token']
     
     # Dispatch to your skill's intent handlers
     if intent_name == "No":
@@ -152,12 +151,15 @@ def on_intent(intent_request, session, context):
     elif intent_name == "ForMysteries":
         return build_pray_response(intent['slots']['mysteries']['value'].lower().encode('utf8'))
     elif intent_name == "AMAZON.ResumeIntent":
+        token=context['AudioPlayer']['token']
         return play_current(token, context['AudioPlayer']['offsetInMilliseconds'])
     elif intent_name == "AMAZON.PauseIntent":
         return playback_stop()
     elif intent_name == "AMAZON.NextIntent":
+        token=context['AudioPlayer']['token']
         return play_next(token, 'REPLACE_ALL', None)
     elif intent_name == "AMAZON.PreviousIntent":
+        token=context['AudioPlayer']['token']
         return play_current(token, 0)
     else:
         raise ValueError("Invalid intent")

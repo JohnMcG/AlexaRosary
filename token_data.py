@@ -42,7 +42,6 @@ class TokenData:
     @classmethod
     def from_token(self, token):
         parts = struct.unpack(FORMAT,token)
-        print(parts)
         return self(parts[0],parts[1],parts[2],parts[3],parts[4])
 
     def get_audio(self):
@@ -104,12 +103,26 @@ class TokenData:
             else:
                 prayer='Mystery'
                 decade += 1
-                print('Incremented decade to' + str(decade))
 
         if prayer != self.prayer:
             counter=0
                 
         return TokenData(prayer_type, mysteries, prayer, decade, counter)
-        
+
+    def __eq__(self, other):
+        if isinstance(other, TokenData):
+            return (self.prayer_type == other.prayer_type
+                    and self.mysteries == other.mysteries
+                    and self.prayer == other.prayer
+                    and self.decade == other.decade
+                    and self.counter == other.counter
+            )
+        else:
+            return NotImplemented
+            
+            
+            
+
+    
         
      
