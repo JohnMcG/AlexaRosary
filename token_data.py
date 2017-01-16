@@ -10,7 +10,7 @@ import struct
 
 
 AUDIO_MAPPING={
-    'SignOfTheCross':'https://s3.amazonaws.com/rosary-files/audio/prayers/SignOfTheCross',
+    'SignOfTheCross':'https://s3.amazonaws.com/rosary-files/audio/prayers/SignOfTheCross.m4a',
     'Creed':'https://s3.amazonaws.com/rosary-files/audio/prayers/Creed.m4a',
     'Our Father':'https://s3.amazonaws.com/rosary-files/audio/prayers/Our+Father.m4a',
     'Hail Mary':'https://s3.amazonaws.com/rosary-files/audio/prayers/Hail+Mary.m4a',
@@ -46,7 +46,7 @@ class TokenData:
 
     def get_audio(self):
         if self.prayer=='Mystery':
-            return 'https://s3.amazonaws.com/rosary-files/audio/mysteries/' + self.mysteries + '/' + str(self.decade)
+            return 'https://s3.amazonaws.com/rosary-files/audio/mysteries/' + self.mysteries + '/' + str(self.decade) + '.m4a'
         else:
             return AUDIO_MAPPING[self.prayer]
 

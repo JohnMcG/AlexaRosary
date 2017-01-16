@@ -192,7 +192,7 @@ def on_intent(intent_request, session, context):
         mysteries = intent['slots']['mysteries']['value'].lower().encode('utf8')
         if not mysteries in MYSTERIES:
             return bad_mysteries_input(mysteries)
-        return build_pray_response()
+        return build_pray_response(mysteries)
     elif intent_name == "AMAZON.ResumeIntent":
         token=context['AudioPlayer']['token']
         return play_current(token, context['AudioPlayer']['offsetInMilliseconds'])
