@@ -12,7 +12,10 @@ import calendar
 import dateutil.parser
 
 
-MYSTERIES = {
+DAYS_OF_WEEK = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday']
+MYSTERIES = ['joyful','sorrowful','glorious','luminous']
+
+MYSTERIES_MAP = {
     'sunday' : 'glorious',
     'monday' : 'joyful',
     'tuesday' : 'sorrowful',
@@ -22,6 +25,9 @@ MYSTERIES = {
     'saturday' : 'joyful'
     }
 
+SMALL_IMAGE_URL='https://s3.amazonaws.com/rosary-files/img/rosary_small.jpg'
+LARGE_IMAGE_URL='https://s3.amazonaws.com/rosary-files/img/rosary_large.jpg'
+IMAGE_CREDIT = 'By FotoKatolik from Polska (Rozaniec) [CC BY-SA 2.0 (http://creativecommons.org/licenses/by-sa/2.0)], via Wikimedia Commons\r\n\r\n'
 
 # --------------- Helpers that build all of the responses ----------------------
 
@@ -33,9 +39,14 @@ def build_speechlet_response(title, output, reprompt_text, card_text, should_end
             'text': output
         },
         'card': {
-            'type': 'Simple',
+            'type': 'Standard',
             'title': "Rosary - " + title,
-            'content': "Rosary - " + card_text
+            'text': IMAGE_CREDIT + 'Rosary - ' + card_text,
+            'image' : {
+                'smallImageUrl': SMALL_IMAGE_URL,
+                'largeImageUrl': LARGE_IMAGE_URL
+            }
+
         },
         'reprompt': {
             'type': 'PlainText',
@@ -58,6 +69,27 @@ def get_farewell_response():
         'Rosary', 'goodbye', '', 'goodbye',
         True))
 
+def not_supported():
+    return build_response({}, build_speechlet_response(
+        'Rosary', 'Operation not supported', '', 'Operation not supported',
+        True))
+
+def bad_day_of_week_input(day):
+    message = day + ' is not a day of the week. Please say a day of the week.'
+    return build_response({}, build_speechlet_response(
+        'Rosary', message, '', message, False))
+
+def bad_mysteries_input(mysteries):
+    message = mysteries + (" is not a set of mysteries of the Rosary. " 
+                           "Valid inputs are Joyful, Sorrowful, Glorious, or Luminous")
+    return build_response({}, build_speechlet_response(
+        'Rosary', message, '', message, True))
+                          
+
+def start_over(token):
+    current_data = TokenData.from_token(token)
+    return build_pray_response(current_data.mysteries)
+
 def build_pray_response(mysteries):
     print ("Sending response for " + mysteries + " mysteries.")
     session_attributes = {}
@@ -65,20 +97,20 @@ def build_pray_response(mysteries):
     return build_response(session_attributes, {
         'outputSpeech': {
             'type': 'PlainText',
-            'text': 'Beginning the ' + mysteries + ' mysteries of the rosary'
+            'text': 'Beginning the ' + mysteries.capitalize() + ' mysteries of the rosary'
         },
         'card': {
-            'type': 'Simple',
-            'title': mysteries + ' mysteries of the Rosary',
-            'content': mysteries + ' mysteries of the Rosary'
+            'type': 'Standard',
+            'title': mysteries.capitalize() + ' mysteries of the Rosary',
+            'text':  IMAGE_CREDIT + mysteries.capitalize() + ' mysteries of the Rosary',
+            'image' : {
+                'smallImageUrl': SMALL_IMAGE_URL,
+                'largeImageUrl': LARGE_IMAGE_URL
+            }
         },
         'reprompt': {            
         },
         'directives': [
-        {
-            'type': 'AudioPlayer.ClearQueue',
-            'clearBehavior': 'CLEAR_ENQUEUED'
-        },
         {
             'type': 'AudioPlayer.Play',
             'playBehavior': 'REPLACE_ALL',
@@ -98,12 +130,8 @@ def build_pray_response(mysteries):
 # --------------- Functions that control the skill's behavior ------------------
 
 def get_welcome_response(timestamp):
-    """ If we wanted to initialize the session to have some attributes we could
-    add those here
-    """
-    
-    my_date = dateutil.parser.parse(timestamp)
-    day_name = calendar.day_name[my_date.weekday()]
+    """ Prompt the user for the day of the week, since we can't get it
+    """    
     session_attributes = {}
     card_title = "Welcome"
     speech_output = "What day of the week is it?"
@@ -156,9 +184,15 @@ def on_intent(intent_request, session, context):
     if intent_name == "No":
         return get_farewell_response()
     elif intent_name == "ForDay":
-         return build_pray_response(MYSTERIES[intent['slots']['day']['value'].lower()])
+        day = intent['slots']['day']['value'].lower()
+        if not day in DAYS_OF_WEEK:
+            return bad_day_of_week_input(day)
+        return build_pray_response(MYSTERIES_MAP[day])
     elif intent_name == "ForMysteries":
-        return build_pray_response(intent['slots']['mysteries']['value'].lower().encode('utf8'))
+        mysteries = intent['slots']['mysteries']['value'].lower().encode('utf8')
+        if not mysteries in MYSTERIES:
+            return bad_mysteries_input(mysteries)
+        return build_pray_response()
     elif intent_name == "AMAZON.ResumeIntent":
         token=context['AudioPlayer']['token']
         return play_current(token, context['AudioPlayer']['offsetInMilliseconds'])
@@ -167,9 +201,18 @@ def on_intent(intent_request, session, context):
     elif intent_name == "AMAZON.NextIntent":
         token=context['AudioPlayer']['token']
         return play_next(token, 'REPLACE_ALL', None)
-    elif intent_name == "AMAZON.PreviousIntent":
+    elif intent_name == 'AMAZON.PreviousIntent':
         token=context['AudioPlayer']['token']
         return play_current(token, 0)
+    elif intent_name == 'AMAZON.StartOverIntent':
+        token=context['AudioPlayer']['token']
+        return start_over(token)        
+    elif (intent_name == 'AMAZON.LoopOffIntent' or
+          intent_name == 'AMAZON.LoopOnIntent' or
+          intent_name == 'AMAZON.RepeatIntent' or
+          intent_name == 'AMAZON.ShuffleOffIntent' or
+          intent_name == 'AMAZON.ShuffleOnIntent'):
+        return not_supported()
     else:
         raise ValueError("Invalid intent")
 
@@ -184,12 +227,10 @@ def on_session_ended(session_ended_request, session):
     # add cleanup logic here
 
 def on_playback_started(started_request):
-    print("Playback started for " + started_request['token'])
     return build_empty_response()
 
 
 def on_playback_finished(finished_request):
-    print("Playback finished for " + finished_request['token'])
     return build_empty_response()
 
 
@@ -207,6 +248,7 @@ def on_playback_nearly_finished(nearly_finished_request):
 def play_next(token, playBehavior, expectedPrevious):
     current_data = TokenData.from_token(token)
     next_data = current_data.get_next()
+    print ("Playing " + next_data.do_print())
     if next_data:
         return {
            'version': '1.0',

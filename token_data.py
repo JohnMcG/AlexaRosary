@@ -11,13 +11,13 @@ import struct
 
 AUDIO_MAPPING={
     'SignOfTheCross':'https://s3.amazonaws.com/rosary-files/audio/prayers/SignOfTheCross',
-    'Creed':'https://s3.amazonaws.com/rosary-files/audio/prayers/Creed',
-    'Our Father':'https://s3.amazonaws.com/rosary-files/audio/prayers/Our+Father',
-    'Hail Mary':'https://s3.amazonaws.com/rosary-files/audio/prayers/Hail+Mary',
-    'Glory Be':'https://s3.amazonaws.com/rosary-files/audio/prayers/Glory+Be',
-    'Fatima Prayer':'https://s3.amazonaws.com/rosary-files/audio/prayers/Fatima+Prayer',
-    'Hail Holy Queen':'https://s3.amazonaws.com/rosary-files/audio/prayers/Hail+Holy+Queen',
-    'ClosingPrayer':'https://s3.amazonaws.com/rosary-files/audio/prayers/ClosingPrayer'
+    'Creed':'https://s3.amazonaws.com/rosary-files/audio/prayers/Creed.m4a',
+    'Our Father':'https://s3.amazonaws.com/rosary-files/audio/prayers/Our+Father.m4a',
+    'Hail Mary':'https://s3.amazonaws.com/rosary-files/audio/prayers/Hail+Mary.m4a',
+    'Glory Be':'https://s3.amazonaws.com/rosary-files/audio/prayers/Glory+Be.m4a',
+    'Fatima Prayer':'https://s3.amazonaws.com/rosary-files/audio/prayers/Fatima+Prayer.m4a',
+    'Hail Holy Queen':'https://s3.amazonaws.com/rosary-files/audio/prayers/Hail+Holy+Queen.m4a',
+    'ClosingPrayer':'https://s3.amazonaws.com/rosary-files/audio/prayers/ClosingPrayer.m4a'
     }
 
 FORMAT='15p15p20pll'
