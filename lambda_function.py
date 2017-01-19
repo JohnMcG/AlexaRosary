@@ -28,6 +28,8 @@ MYSTERIES_MAP = {
 SMALL_IMAGE_URL='https://s3.amazonaws.com/rosary-files/img/rosary_small.jpg'
 LARGE_IMAGE_URL='https://s3.amazonaws.com/rosary-files/img/rosary_large.jpg'
 IMAGE_CREDIT = 'By FotoKatolik from Polska (Rozaniec) [CC BY-SA 2.0 (http://creativecommons.org/licenses/by-sa/2.0)], via Wikimedia Commons\r\n\r\n'
+HELP_TEXT = 'You can say a day of the week or request the Joyful, Sorrowful, Glorious, or Luminous Mysteries'
+
 
 # --------------- Helpers that build all of the responses ----------------------
 
@@ -68,6 +70,10 @@ def get_farewell_response():
     return build_response({}, build_speechlet_response(
         'Rosary', 'goodbye', '', 'goodbye',
         True))
+
+def get_help_response():
+    return build_response({}, build_speechlet_response(
+        'Rosary', HELP_TEXT, '', HELP_TEXT, False))
 
 def not_supported():
     return build_response({}, build_speechlet_response(
@@ -181,8 +187,10 @@ def on_intent(intent_request, session, context):
 
     
     # Dispatch to your skill's intent handlers
-    if intent_name == "No":
+    if intent_name == 'No':
         return get_farewell_response()
+    if intent_name == 'AMAZON.HelpIntent':
+        return get_help_response()
     elif intent_name == "ForDay":
         day = intent['slots']['day']['value'].lower()
         if not day in DAYS_OF_WEEK:
