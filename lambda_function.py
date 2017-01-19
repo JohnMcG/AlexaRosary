@@ -362,10 +362,19 @@ def lambda_handler(event, context):
     print("Processing event: " + event['request']['requestId']
           + ": " + event['request']['type']);
 
+    context = { 'AudioPlayer':
+                {
+                    'token': TokenData('Rosary','Joyful','SignOfTheCross',0,0).get_token(),
+                    'offsetInMilliseconds':0
+                }
+    }
+    if 'context' in event:
+        context = event['context'];
+    
     if event['request']['type'] == "LaunchRequest":
         return on_launch(event['request'], event['session'])
     elif event['request']['type'] == "IntentRequest":
-        return on_intent(event['request'], event['session'], event['context'])
+        return on_intent(event['request'], event['session'], context)
     elif event['request']['type'] == "SessionEndedRequest":
         return on_session_ended(event['request'], event['session'])
     elif event['request']['type'] == "AudioPlayer.PlaybackNearlyFinished":
@@ -379,11 +388,11 @@ def lambda_handler(event, context):
     elif event['request']['type'] == "AudioPlayer.PlaybackFailed":
         return on_playback_failed(event['request'])
     elif event['request']['type'] == "PlaybackController.PlayCommandIssued":
-        return on_play_command(event['request'], event['context'])
+        return on_play_command(event['request'], context)
     elif event['request']['type'] == "PlaybackController.NextCommandIssued":
-        return on_next_command(event['request'], event['context'])
+        return on_next_command(event['request'], context)
     elif event['request']['type'] == "PlaybackController.PreviousCommandIssued":
-        return on_previous_command(event['request'], event['context'])
+        return on_previous_command(event['request'], context)
     elif event['request']['type'] == "System.ExceptionEncountered":
         handle_exception(event['request'])
 
