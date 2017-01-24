@@ -33,7 +33,7 @@ HELP_TEXT = 'You can say a day of the week or request the Joyful, Sorrowful, Glo
 
 # --------------- Helpers that build all of the responses ----------------------
 
-def build_speechlet_response(title, output, reprompt_text, card_text, should_end_session):
+def build_speechlet_response(title, output, reprompt_text, card_text, should_end_session, directives):
     print ("Bulding speechlet response")
     return {
         'outputSpeech': {
@@ -54,7 +54,7 @@ def build_speechlet_response(title, output, reprompt_text, card_text, should_end
             'type': 'PlainText',
             'text': reprompt_text
         },
-        'directives': [],
+        'directives': directives,
         'shouldEndSession': should_end_session
     }
 
@@ -67,29 +67,34 @@ def build_response(session_attributes, speechlet_response):
     }
 
 def get_farewell_response():
+    directives = [
+                {
+                    'type': 'AudioPlayer.Stop'
+                }
+            ] 
     return build_response({}, build_speechlet_response(
         'Rosary', 'goodbye', '', 'goodbye',
-        True))
+        True, directives))
 
 def get_help_response():
     return build_response({}, build_speechlet_response(
-        'Rosary', HELP_TEXT, '', HELP_TEXT, False))
+        'Rosary', HELP_TEXT, '', HELP_TEXT, False, []))
 
 def not_supported():
     return build_response({}, build_speechlet_response(
         'Rosary', 'Operation not supported', '', 'Operation not supported',
-        True))
+        True, []))
 
 def bad_day_of_week_input(day):
     message = day + ' is not a day of the week. Please say a day of the week.'
     return build_response({}, build_speechlet_response(
-        'Rosary', message, '', message, False))
+        'Rosary', message, '', message, False, []))
 
 def bad_mysteries_input(mysteries):
     message = mysteries + (" is not a set of mysteries of the Rosary. " 
                            "Valid inputs are Joyful, Sorrowful, Glorious, or Luminous")
     return build_response({}, build_speechlet_response(
-        'Rosary', message, '', message, True))
+        'Rosary', message, '', message, True, []))
                           
 
 def start_over(token):
@@ -146,7 +151,7 @@ def get_welcome_response(timestamp):
     should_end_session = False
     return build_response(session_attributes, build_speechlet_response(
         card_title, speech_output, reprompt_text, speech_output,
-        should_end_session))
+        should_end_session, []))
 
 def build_empty_response():
     return {
@@ -187,7 +192,7 @@ def on_intent(intent_request, session, context):
 
     
     # Dispatch to your skill's intent handlers
-    if intent_name == 'No':
+    if intent_name == 'No' or intent_name == 'AMAZON.CancelIntent':
         return get_farewell_response()
     if intent_name == 'AMAZON.HelpIntent':
         return get_help_response()
