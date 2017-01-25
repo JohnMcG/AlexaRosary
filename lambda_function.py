@@ -29,6 +29,10 @@ SMALL_IMAGE_URL='https://s3.amazonaws.com/rosary-files/img/rosary_small.jpg'
 LARGE_IMAGE_URL='https://s3.amazonaws.com/rosary-files/img/rosary_large.jpg'
 IMAGE_CREDIT = 'By FotoKatolik from Polska (Rozaniec) [CC BY-SA 2.0 (http://creativecommons.org/licenses/by-sa/2.0)], via Wikimedia Commons\r\n\r\n'
 HELP_TEXT = 'You can say a day of the week or request the Joyful, Sorrowful, Glorious, or Luminous Mysteries'
+DEFAULT_MYSTERIES_SLOTS = { 'mysteries': ''}
+DEFAULT_DAY_SLOTS = {'day' : {'value': ''}}
+DEFAULT_VALUES = {'value' : '' }
+DEFAULT_VALUE = ''
 
 
 # --------------- Helpers that build all of the responses ----------------------
@@ -51,8 +55,10 @@ def build_speechlet_response(title, output, reprompt_text, card_text, should_end
 
         },
         'reprompt': {
-            'type': 'PlainText',
-            'text': reprompt_text
+            'outputSpeech': {
+                'type': 'PlainText',
+                'text': reprompt_text
+            }
         },
         'directives': directives,
         'shouldEndSession': should_end_session
@@ -88,13 +94,13 @@ def not_supported():
 def bad_day_of_week_input(day):
     message = day + ' is not a day of the week. Please say a day of the week.'
     return build_response({}, build_speechlet_response(
-        'Rosary', message, '', message, False, []))
+        'Rosary', message, message, message, False, []))
 
 def bad_mysteries_input(mysteries):
     message = mysteries + (" is not a set of mysteries of the Rosary. " 
-                           "Valid inputs are Joyful, Sorrowful, Glorious, or Luminous")
+                           "Please say Joyful, Sorrowful, Glorious, or Luminous.")
     return build_response({}, build_speechlet_response(
-        'Rosary', message, '', message, True, []))
+        'Rosary', message, message, message, False, []))
                           
 
 def start_over(token):
@@ -140,7 +146,7 @@ def build_pray_response(mysteries):
 
 # --------------- Functions that control the skill's behavior ------------------
 
-def get_welcome_response(timestamp):
+def get_welcome_response():
     """ Prompt the user for the day of the week, since we can't get it
     """    
     session_attributes = {}
@@ -176,7 +182,7 @@ def on_launch(launch_request, session):
           ", sessionId=" + session['sessionId'])
     # Dispatch to your skill's launch
 
-    return get_welcome_response(launch_request["timestamp"])
+    return get_welcome_response()
 
 
 def on_intent(intent_request, session, context):
@@ -189,20 +195,25 @@ def on_intent(intent_request, session, context):
     intent_name = intent_request['intent']['name']
 
     print("intent: " + intent_name)
-
-    
+        
     # Dispatch to your skill's intent handlers
-    if intent_name == 'No' or intent_name == 'AMAZON.CancelIntent':
+    if intent_name == 'Cancel' or intent_name == 'AMAZON.CancelIntent':
         return get_farewell_response()
-    if intent_name == 'AMAZON.HelpIntent':
+    elif intent_name == 'Rosary':
+        return get_welcome_response()
+    elif intent_name == 'AMAZON.HelpIntent':
         return get_help_response()
     elif intent_name == "ForDay":
-        day = intent['slots']['day']['value'].lower()
+        day = intent.get('slots',DEFAULT_DAY_SLOTS) \
+        .get('day', DEFAULT_VALUES) \
+        .get('value', DEFAULT_VALUE).lower()
         if not day in DAYS_OF_WEEK:
             return bad_day_of_week_input(day)
         return build_pray_response(MYSTERIES_MAP[day])
     elif intent_name == "ForMysteries":
-        mysteries = intent['slots']['mysteries']['value'].lower().encode('utf8')
+        mysteries = intent.get('slots',DEFAULT_MYSTERIES_SLOTS) \
+        .get('mysteries', DEFAULT_VALUES) \
+        .get('value',DEFAULT_VALUE).lower().encode('utf8')
         if not mysteries in MYSTERIES:
             return bad_mysteries_input(mysteries)
         return build_pray_response(mysteries)

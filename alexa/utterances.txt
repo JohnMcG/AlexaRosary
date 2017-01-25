@@ -4,6 +4,9 @@ ForDay {day}
 ForDay pray rosary for {day}
 ForMysteries pray the {mysteries} mysteries of the Rosary
 ForMysteries {mysteries}
-No cancel
-No quit
-No stop
+ForMysteries {mysteries} mysteries
+Rosary pray rosary
+Rosary pray the rosary
+Cancel cancel
+Cancel stop
+Cancel never mind

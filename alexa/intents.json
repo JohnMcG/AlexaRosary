@@ -16,9 +16,6 @@
             "intent": "AMAZON.HelpIntent"
         },
       	{
-          "intent": "No"
-        },
-      	{
            "intent": "ForDay",
            "slots": [
           	{
@@ -35,6 +32,12 @@
       			"type": "MYSTERIES"
       		}
            ]
-      	}
+      	},
+	    {
+          "intent": "Rosary"
+        },
+	{
+          "intent": "Cancel"
+        }
     ]
 }
