@@ -1,0 +1,9 @@
+ForMysteries pray the {mysteries} mysteries
+ForDay pray the rosary for {day}
+ForDay {day}
+ForDay pray rosary for {day}
+ForMysteries pray the {mysteries} mysteries of the Rosary
+ForMysteries {mysteries}
+No cancel
+No quit
+No stop

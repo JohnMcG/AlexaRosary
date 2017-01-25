@@ -1,0 +1,40 @@
+{
+    "intents": [
+        {
+            "intent": "AMAZON.ResumeIntent"
+        },
+        {
+            "intent": "AMAZON.PauseIntent"
+        },
+      	{
+          "intent" : "AMAZON.NextIntent"          
+        },
+        {
+          "intent" : "AMAZON.PreviousIntent"
+        },
+        {
+            "intent": "AMAZON.HelpIntent"
+        },
+      	{
+          "intent": "No"
+        },
+      	{
+           "intent": "ForDay",
+           "slots": [
+          	{
+          		"name": "day",
+          		"type": "AMAZON.DayOfWeek"
+        	}
+          ]
+        },
+      	{
+      		"intent": "ForMysteries",
+      		"slots" : [
+      		{
+      			"name": "mysteries",
+      			"type": "MYSTERIES"
+      		}
+           ]
+      	}
+    ]
+}
