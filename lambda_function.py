@@ -272,8 +272,8 @@ def on_playback_nearly_finished(nearly_finished_request):
 def play_next(token, playBehavior, expectedPrevious):
     current_data = TokenData.from_token(token)
     next_data = current_data.get_next()
-    print ("Playing " + next_data.do_print())
     if next_data:
+        print ("Playing " + next_data.do_print())
         return {
            'version': '1.0',
            'response': {

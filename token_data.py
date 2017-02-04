@@ -7,17 +7,18 @@ by John McGuinness, 2017
 from __future__ import print_function
 import struct
 
+AUDIO_HOST='https://d3o7ydz0hvnlou.cloudfront.net/'
 
 
 AUDIO_MAPPING={
-    'SignOfTheCross':'https://s3.amazonaws.com/rosary-files/audio/prayers/SignOfTheCross.m4a',
-    'Creed':'https://s3.amazonaws.com/rosary-files/audio/prayers/Creed.m4a',
-    'Our Father':'https://s3.amazonaws.com/rosary-files/audio/prayers/Our+Father.m4a',
-    'Hail Mary':'https://s3.amazonaws.com/rosary-files/audio/prayers/Hail+Mary.m4a',
-    'Glory Be':'https://s3.amazonaws.com/rosary-files/audio/prayers/Glory+Be.m4a',
-    'Fatima Prayer':'https://s3.amazonaws.com/rosary-files/audio/prayers/Fatima+Prayer.m4a',
-    'Hail Holy Queen':'https://s3.amazonaws.com/rosary-files/audio/prayers/Hail+Holy+Queen.m4a',
-    'ClosingPrayer':'https://s3.amazonaws.com/rosary-files/audio/prayers/ClosingPrayer.m4a'
+    'SignOfTheCross': AUDIO_HOST + 'prayers/SignOfTheCross.m4a',
+    'Creed': AUDIO_HOST + 'prayers/Creed.m4a',
+    'Our Father': AUDIO_HOST + 'prayers/Our+Father.m4a',
+    'Hail Mary': AUDIO_HOST + 'prayers/Hail+Mary.m4a',
+    'Glory Be': AUDIO_HOST + 'prayers/Glory+Be.m4a',
+    'Fatima Prayer': AUDIO_HOST + 'prayers/Fatima+Prayer.m4a',
+    'Hail Holy Queen': AUDIO_HOST + 'prayers/Hail+Holy+Queen.m4a',
+    'ClosingPrayer': AUDIO_HOST + 'prayers/ClosingPrayer.m4a'
     }
 
 FORMAT='15p15p20pll'
@@ -46,7 +47,7 @@ class TokenData:
 
     def get_audio(self):
         if self.prayer=='Mystery':
-            return 'https://s3.amazonaws.com/rosary-files/audio/mysteries/' + self.mysteries + '/' + str(self.decade) + '.m4a'
+            return AUDIO_HOST + 'mysteries/' + self.mysteries + '/' + str(self.decade) + '.m4a'
         else:
             return AUDIO_MAPPING[self.prayer]
 
