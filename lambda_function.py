@@ -7,9 +7,8 @@ by John McGuinness, 2017
 
 from __future__ import print_function
 from token_data import TokenData
-from datetime import date
-import calendar
-import dateutil.parser
+from token_data import RosaryTokenData
+from token_data import DivineMercyTokenData
 
 
 DAYS_OF_WEEK = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday']
@@ -33,7 +32,7 @@ DEFAULT_MYSTERIES_SLOTS = { 'mysteries': ''}
 DEFAULT_DAY_SLOTS = {'day' : {'value': ''}}
 DEFAULT_VALUES = {'value' : '' }
 DEFAULT_VALUE = ''
-
+APP_TITLE = 'Prayer Buddy'
 
 # --------------- Helpers that build all of the responses ----------------------
 
@@ -46,8 +45,8 @@ def build_speechlet_response(title, output, reprompt_text, card_text, should_end
         },
         'card': {
             'type': 'Standard',
-            'title': "Rosary - " + title,
-            'text': IMAGE_CREDIT + 'Rosary - ' + card_text,
+            'title': 'Prayer Buddy - ' + title,
+            'text': IMAGE_CREDIT + APP_TITLE + ' - ' + card_text,
             'image' : {
                 'smallImageUrl': SMALL_IMAGE_URL,
                 'largeImageUrl': LARGE_IMAGE_URL
@@ -79,12 +78,12 @@ def get_farewell_response():
                 }
             ] 
     return build_response({}, build_speechlet_response(
-        'Rosary', 'goodbye', '', 'goodbye',
+        APP_TITLE, 'goodbye', '', 'goodbye',
         True, directives))
 
 def get_help_response():
     return build_response({}, build_speechlet_response(
-        'Rosary', HELP_TEXT, '', HELP_TEXT, False, []))
+        APP_TITLE, HELP_TEXT, '', HELP_TEXT, False, []))
 
 def not_supported():
     return build_response({}, build_speechlet_response(
@@ -94,13 +93,13 @@ def not_supported():
 def bad_day_of_week_input(day):
     message = day + ' is not a day of the week. Please say a day of the week.'
     return build_response({}, build_speechlet_response(
-        'Rosary', message, message, message, False, []))
+        APP_TITLE, message, message, message, False, []))
 
 def bad_mysteries_input(mysteries):
     message = mysteries + (" is not a set of mysteries of the Rosary. " 
                            "Please say Joyful, Sorrowful, Glorious, or Luminous.")
     return build_response({}, build_speechlet_response(
-        'Rosary', message, message, message, False, []))
+        APP_TITLE, message, message, message, False, []))
                           
 
 def start_over(token):
@@ -110,7 +109,7 @@ def start_over(token):
 def build_pray_response(mysteries):
     print ("Sending response for " + mysteries + " mysteries.")
     session_attributes = {}
-    currentData = TokenData('Rosary',mysteries,'SignOfTheCross',0,0)
+    currentData = RosaryTokenData(mysteries,'SignOfTheCross',0,0)
     return build_response(session_attributes, {
         'outputSpeech': {
             'type': 'PlainText',
@@ -144,13 +143,63 @@ def build_pray_response(mysteries):
     })
 
 
+def build_divine_mercy_response():
+    print ("Sending response for chaplet of divine mercy")
+    session_attributes = {}
+    currentData = DivineMercyTokenData('SignOfTheCross',0,0)
+    return build_response(session_attributes, {
+        'outputSpeech': {
+            'type': 'PlainText',
+            'text': 'Beginning the Divine Mercy Chaplet'
+        },
+        'card': {
+            'type': 'Standard',
+            'title': 'Divine Mercy Chaplet',
+            'text':  IMAGE_CREDIT + ' Divine Mercy Chaplet',
+            'image' : {
+                'smallImageUrl': SMALL_IMAGE_URL,
+                'largeImageUrl': LARGE_IMAGE_URL
+            }
+        },
+        'reprompt': {            
+        },
+        'directives': [
+        {
+            'type': 'AudioPlayer.Play',
+            'playBehavior': 'REPLACE_ALL',
+            'audioItem': {
+                'stream': {
+                    'token': currentData.get_token(),
+                    'url': currentData.get_audio(),
+                    'offsetInMilliseconds': 0
+                }
+            }
+        }
+        ],
+        'shouldEndSession': True
+    })
+
+
 # --------------- Functions that control the skill's behavior ------------------
 
 def get_welcome_response():
-    """ Prompt the user for the day of the week, since we can't get it
+    """ Prompt the user for the prayer
     """    
     session_attributes = {}
     card_title = "Welcome"
+    speech_output = "What would you like me to pray with you? I can pray the Rosary and the Divine Mercy Chaplet."
+    reprompt_text = "What would you like me to pray with you?"
+
+    should_end_session = False
+    return build_response(session_attributes, build_speechlet_response(
+        card_title, speech_output, reprompt_text, speech_output,
+        should_end_session, []))
+
+def get_rosary_response():
+    """ Prompt the user for the day of the week, since we can't get it
+    """    
+    session_attributes = {}
+    card_title = "Rosary"
     speech_output = "What day of the week is it?"
     reprompt_text = "What day of the week is it?"
 
@@ -158,6 +207,7 @@ def get_welcome_response():
     return build_response(session_attributes, build_speechlet_response(
         card_title, speech_output, reprompt_text, speech_output,
         should_end_session, []))
+
 
 def build_empty_response():
     return {
@@ -200,7 +250,9 @@ def on_intent(intent_request, session, context):
     if intent_name == 'Cancel' or intent_name == 'AMAZON.CancelIntent':
         return get_farewell_response()
     elif intent_name == 'Rosary':
-        return get_welcome_response()
+        return get_rosary_response()
+    elif intent_name == 'DivineMercy':
+        return build_divine_mercy_response()
     elif intent_name == 'AMAZON.HelpIntent':
         return get_help_response()
     elif intent_name == "ForDay":
@@ -378,9 +430,9 @@ def lambda_handler(event, context):
     print("Processing event: " + event['request']['requestId']
           + ": " + event['request']['type']);
 
-    context = { 'AudioPlayer':
+    default_context = { 'AudioPlayer':
                 {
-                    'token': TokenData('Rosary','Joyful','SignOfTheCross',0,0).get_token(),
+                    'token': RosaryTokenData('Joyful','SignOfTheCross',0,0).get_token(),
                     'offsetInMilliseconds':0
                 }
     }
@@ -390,7 +442,7 @@ def lambda_handler(event, context):
     if event['request']['type'] == "LaunchRequest":
         return on_launch(event['request'], event['session'])
     elif event['request']['type'] == "IntentRequest":
-        return on_intent(event['request'], event['session'], context)
+        return on_intent(event['request'], event['session'], default_context)
     elif event['request']['type'] == "SessionEndedRequest":
         return on_session_ended(event['request'], event['session'])
     elif event['request']['type'] == "AudioPlayer.PlaybackNearlyFinished":
@@ -404,11 +456,11 @@ def lambda_handler(event, context):
     elif event['request']['type'] == "AudioPlayer.PlaybackFailed":
         return on_playback_failed(event['request'])
     elif event['request']['type'] == "PlaybackController.PlayCommandIssued":
-        return on_play_command(event['request'], context)
+        return on_play_command(event['request'], default_context)
     elif event['request']['type'] == "PlaybackController.NextCommandIssued":
-        return on_next_command(event['request'], context)
+        return on_next_command(event['request'], default_context)
     elif event['request']['type'] == "PlaybackController.PreviousCommandIssued":
-        return on_previous_command(event['request'], context)
+        return on_previous_command(event['request'], default_context)
     elif event['request']['type'] == "System.ExceptionEncountered":
         handle_exception(event['request'])
 

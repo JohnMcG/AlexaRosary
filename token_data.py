@@ -6,8 +6,10 @@ by John McGuinness, 2017
 
 from __future__ import print_function
 import struct
+import os
+from abc import ABCMeta, abstractmethod
 
-AUDIO_HOST='https://d3o7ydz0hvnlou.cloudfront.net/'
+AUDIO_HOST=os.environ['AUDIO_HOST']
 
 
 AUDIO_MAPPING={
@@ -18,18 +20,23 @@ AUDIO_MAPPING={
     'Glory Be': AUDIO_HOST + 'prayers/Glory+Be.m4a',
     'Fatima Prayer': AUDIO_HOST + 'prayers/Fatima+Prayer.m4a',
     'Hail Holy Queen': AUDIO_HOST + 'prayers/Hail+Holy+Queen.m4a',
-    'ClosingPrayer': AUDIO_HOST + 'prayers/ClosingPrayer.m4a'
+    'ClosingPrayer': AUDIO_HOST + 'prayers/ClosingPrayer.m4a',
+    'Holy God': AUDIO_HOST + 'prayers/Holy+God.m4a',
+    'For the sake': AUDIO_HOST + 'prayers/For+the+sake.m4a',
+    'Eternal Father': AUDIO_HOST + 'prayers/Eternal+Father.m4a'
     }
 
 FORMAT='15p15p20pll'
 
-class TokenData:
+class TokenData(object):
     prayer_type='Rosary'
     mysteries='joyful'
     prayer='Creed'
     decade=0
     counter=0
 
+    __metaclass__ = ABCMeta
+    
     def do_print(self):
         return (self.prayer_type + ":" + self.mysteries + ":" + str(self.decade) + ":" + self.prayer + ":" + str(self.counter))
 
@@ -43,8 +50,14 @@ class TokenData:
     @classmethod
     def from_token(self, token):
         parts = struct.unpack(FORMAT,token)
-        return self(parts[0],parts[1],parts[2],parts[3],parts[4])
-
+        type  = parts[0];
+        if (type == 'Rosary'):
+            return RosaryTokenData(parts[1],parts[2],parts[3],parts[4])
+        elif (type == 'Divine Mercy'):
+            return DivineMercyTokenData(parts[2],parts[3],parts[4])
+        else:
+            raise NotImplementedError('Bad prayer type:' + type)
+        
     def get_audio(self):
         if self.prayer=='Mystery':
             return AUDIO_HOST + 'mysteries/' + self.mysteries + '/' + str(self.decade) + '.m4a'
@@ -58,13 +71,28 @@ class TokenData:
                            self.decade,
                            self.counter)
 
+
+    @abstractmethod
     def get_next(self):
-        if self.prayer_type == "Rosary":
-            return self._get_next_rosary()
+        pass
+    
+    def __eq__(self, other):
+        if isinstance(other, TokenData):
+            return (self.prayer_type == other.prayer_type
+                    and self.mysteries == other.mysteries
+                    and self.prayer == other.prayer
+                    and self.decade == other.decade
+                    and self.counter == other.counter
+            )
+        else:
+            return NotImplemented
 
-    def _get_next_rosary(self):
 
-        prayer_type=self.prayer_type
+class RosaryTokenData(TokenData):
+    def __init__(self,mysteries,prayer,decade,counter):
+        super(RosaryTokenData, self).__init__('Rosary',mysteries,prayer,decade,counter)
+    
+    def get_next(self):
         mysteries=self.mysteries
         prayer=self.prayer
         counter=self.counter+1
@@ -99,7 +127,7 @@ class TokenData:
             prayer='Fatima Prayer'
 
         elif self.prayer=='Fatima Prayer':
-            if self.decade == 5:
+            if self.decade >= 5:
                 prayer='Hail Holy Queen'
             else:
                 prayer='Mystery'
@@ -108,19 +136,53 @@ class TokenData:
         if prayer != self.prayer:
             counter=0
                 
-        return TokenData(prayer_type, mysteries, prayer, decade, counter)
+        return RosaryTokenData(mysteries, prayer, decade, counter)
 
-    def __eq__(self, other):
-        if isinstance(other, TokenData):
-            return (self.prayer_type == other.prayer_type
-                    and self.mysteries == other.mysteries
-                    and self.prayer == other.prayer
-                    and self.decade == other.decade
-                    and self.counter == other.counter
-            )
-        else:
-            return NotImplemented
+class DivineMercyTokenData(TokenData):
+    def __init__(self,prayer,decade,counter):
+        super(DivineMercyTokenData, self).__init__('Divine Mercy','',prayer,decade,counter)
+    
+    def get_next(self):
+        prayer=self.prayer
+        counter=self.counter+1
+        decade=self.decade
+
+        if self.prayer == 'SignOfTheCross':
+            if (self.decade == 0):
+                prayer='Our Father'
+            else:
+                return {}
+
+        elif self.prayer == 'Our Father':
+            prayer='Hail Mary'
+
+        elif self.prayer == 'Hail Mary':
+            prayer='Creed'
+
+        if self.prayer == 'Creed':
+            decade += 1
+            prayer ='Eternal Father'
+
+        if self.prayer == 'Eternal Father':
+            prayer = 'For the sake'
+
+
+        elif self.prayer == 'For the sake':
+            if (counter >= 10):
+                if (decade >= 5):
+                    prayer='Holy God'
+                else:
+                    decade += 1
+                    prayer='Eternal Father'
             
+        if self.prayer == 'Holy God':
+            prayer='SignOfTheCross'
+
+        if prayer != self.prayer:
+            counter=0
+                
+        return DivineMercyTokenData(prayer, decade, counter)
+
             
             
 
