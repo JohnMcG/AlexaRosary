@@ -36,7 +36,10 @@
 	    {
           "intent": "Rosary"
         },
-	{
+      	{
+          "intent": "DivineMercy"
+        },
+	    {
           "intent": "Cancel"
         }
     ]

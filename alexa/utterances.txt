@@ -7,6 +7,14 @@ ForMysteries {mysteries}
 ForMysteries {mysteries} mysteries
 Rosary pray rosary
 Rosary pray the rosary
+Rosary rosary
+DivineMercy divine mercy
+DivineMercy divine mercy chaplet
+DivineMercy pray divine mercy
+DivineMercy pray the divine mercy chaplet
+DivineMercy pray divine mercy chaplet
+DivineMercy pray the chaplet of divine mercy
 Cancel cancel
 Cancel stop
 Cancel never mind
+
