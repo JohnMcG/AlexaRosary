@@ -104,7 +104,11 @@ def bad_mysteries_input(mysteries):
 
 def start_over(token):
     current_data = TokenData.from_token(token)
-    return build_pray_response(current_data.mysteries)
+    if current_data.prayer_type == 'Rosary':
+        return build_pray_response(current_data.mysteries)
+    else:
+        return build_divine_mercy_response()
+       
 
 def build_pray_response(mysteries):
     print ("Sending response for " + mysteries + " mysteries.")
@@ -417,11 +421,6 @@ def lambda_handler(event, context):
     etc.) The JSON body of the request is provided in the event parameter.
     """
 
-    """
-    Uncomment this if statement and populate with your skill's application ID to
-    prevent someone else from configuring a skill that sends requests to this
-    function.
-    """
     if (event.has_key('session') and event['session']['application']['applicationId'] !=
              "amzn1.ask.skill.43e06ff9-fe37-4785-ad97-76508f4a2896"):
          raise ValueError("Invalid Application ID")
@@ -436,13 +435,13 @@ def lambda_handler(event, context):
                     'offsetInMilliseconds':0
                 }
     }
-    if 'context' in event:
-        context = event['context'];
-    
+
+    context = event.get('context',default_context)
+        
     if event['request']['type'] == "LaunchRequest":
         return on_launch(event['request'], event['session'])
     elif event['request']['type'] == "IntentRequest":
-        return on_intent(event['request'], event['session'], default_context)
+        return on_intent(event['request'], event['session'], context)
     elif event['request']['type'] == "SessionEndedRequest":
         return on_session_ended(event['request'], event['session'])
     elif event['request']['type'] == "AudioPlayer.PlaybackNearlyFinished":
