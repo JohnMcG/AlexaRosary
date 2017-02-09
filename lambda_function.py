@@ -455,11 +455,11 @@ def lambda_handler(event, context):
     elif event['request']['type'] == "AudioPlayer.PlaybackFailed":
         return on_playback_failed(event['request'])
     elif event['request']['type'] == "PlaybackController.PlayCommandIssued":
-        return on_play_command(event['request'], default_context)
+        return on_play_command(event['request'], context)
     elif event['request']['type'] == "PlaybackController.NextCommandIssued":
-        return on_next_command(event['request'], default_context)
+        return on_next_command(event['request'], context)
     elif event['request']['type'] == "PlaybackController.PreviousCommandIssued":
-        return on_previous_command(event['request'], default_context)
+        return on_previous_command(event['request'], context)
     elif event['request']['type'] == "System.ExceptionEncountered":
         handle_exception(event['request'])
 
