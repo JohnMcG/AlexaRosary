@@ -39,8 +39,11 @@
       	{
           "intent": "DivineMercy"
         },
-	    {
+	{
           "intent": "Cancel"
-        }
+        },
+	{
+	  "intent": "Help"
+	}
     ]
 }

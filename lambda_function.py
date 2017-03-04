@@ -27,7 +27,7 @@ MYSTERIES_MAP = {
 SMALL_IMAGE_URL='https://s3.amazonaws.com/rosary-files/img/rosary_small.jpg'
 LARGE_IMAGE_URL='https://s3.amazonaws.com/rosary-files/img/rosary_large.jpg'
 IMAGE_CREDIT = 'By FotoKatolik from Polska (Rozaniec) [CC BY-SA 2.0 (http://creativecommons.org/licenses/by-sa/2.0)], via Wikimedia Commons\r\n\r\n'
-HELP_TEXT = 'You can say a day of the week or request the Joyful, Sorrowful, Glorious, or Luminous Mysteries'
+HELP_TEXT = 'You can say Divine Mercy Chaplet, a day of the week or request the Joyful, Sorrowful, Glorious, or Luminous Mysteries'
 DEFAULT_MYSTERIES_SLOTS = { 'mysteries': ''}
 DEFAULT_DAY_SLOTS = {'day' : {'value': ''}}
 DEFAULT_VALUES = {'value' : '' }
@@ -257,14 +257,14 @@ def on_intent(intent_request, session, context):
         return get_rosary_response()
     elif intent_name == 'DivineMercy':
         return build_divine_mercy_response()
-    elif intent_name == 'AMAZON.HelpIntent':
+    elif intent_name == 'AMAZON.HelpIntent' or intent_name == 'Help':
         return get_help_response()
     elif intent_name == "ForDay":
         day = intent.get('slots',DEFAULT_DAY_SLOTS) \
         .get('day', DEFAULT_VALUES) \
         .get('value', DEFAULT_VALUE).lower()
         if not day in DAYS_OF_WEEK:
-            return bad_day_of_week_input(day)
+            return get_help_response()
         return build_pray_response(MYSTERIES_MAP[day])
     elif intent_name == "ForMysteries":
         mysteries = intent.get('slots',DEFAULT_MYSTERIES_SLOTS) \
