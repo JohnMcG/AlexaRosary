@@ -323,7 +323,7 @@ def on_playback_stopped(stopped_request):
 def on_playback_nearly_finished(nearly_finished_request):
     print("playing next prayer")
     token = nearly_finished_request['token']
-    return play_next(token, 'REPLACE_ENQUEUED', None)
+    return play_next(token, 'ENQUEUE', token)
 
 def play_next(token, playBehavior, expectedPrevious):
     current_data = TokenData.from_token(token)
