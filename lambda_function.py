@@ -27,7 +27,7 @@ MYSTERIES_MAP = {
 SMALL_IMAGE_URL='https://s3.amazonaws.com/rosary-files/img/rosary_small.jpg'
 LARGE_IMAGE_URL='https://s3.amazonaws.com/rosary-files/img/rosary_large.jpg'
 IMAGE_CREDIT = 'By FotoKatolik from Polska (Rozaniec) [CC BY-SA 2.0 (http://creativecommons.org/licenses/by-sa/2.0)], via Wikimedia Commons\r\n\r\n'
-HELP_TEXT = 'You can say Divine Mercy Chaplet, a day of the week or request the Joyful, Sorrowful, Glorious, or Luminous Mysteries'
+HELP_TEXT = 'You can say Divine Mercy Chaplet, Rosary, or request the Joyful, Sorrowful, Glorious, or Luminous Mysteries. What would you like me to pray with you?'
 DEFAULT_MYSTERIES_SLOTS = { 'mysteries': ''}
 DEFAULT_DAY_SLOTS = {'day' : {'value': ''}}
 DEFAULT_VALUES = {'value' : '' }
@@ -93,13 +93,20 @@ def not_supported():
 def bad_day_of_week_input(day):
     message = day + ' is not a day of the week. Please say a day of the week.'
     return build_response({}, build_speechlet_response(
-        APP_TITLE, message, message, message, False, []))
+        APP_TITLE, message, message, message, False, [{
+                    'type': 'Dialog.ElicitSlot',
+                    'slotToElicit': 'day'
+                }]))
 
-def bad_mysteries_input(mysteries):
+def bad_mysteries_input(mysteries):    
     message = mysteries + (" is not a set of mysteries of the Rosary. " 
                            "Please say Joyful, Sorrowful, Glorious, or Luminous.")
     return build_response({}, build_speechlet_response(
-        APP_TITLE, message, message, message, False, []))
+        APP_TITLE, message, message, message, False,
+                [{
+                    'type': 'Dialog.ElicitSlot',
+                    'slotToElicit': 'mysteries'
+                }]))
                           
 
 def start_over(token):
@@ -186,6 +193,19 @@ def build_divine_mercy_response():
 
 # --------------- Functions that control the skill's behavior ------------------
 
+def get_delegate_response():
+    print('Sending Delegate response')
+    return {
+        'version': '1.0',
+        'response': {
+            'directives': [
+                {
+                    'type': 'Dialog.Delegate'
+                }
+            ]
+        }
+    }
+
 def get_welcome_response():
     """ Prompt the user for the prayer
     """    
@@ -249,6 +269,10 @@ def on_intent(intent_request, session, context):
     intent_name = intent_request['intent']['name']
 
     print("intent: " + intent_name)
+
+    dialogState = intent_request['dialogState']
+    print('Dialog state is ' + dialogState)
+    
         
     # Dispatch to your skill's intent handlers
     if intent_name == 'Cancel' or intent_name == 'AMAZON.CancelIntent':
@@ -260,19 +284,25 @@ def on_intent(intent_request, session, context):
     elif intent_name == 'AMAZON.HelpIntent' or intent_name == 'Help':
         return get_help_response()
     elif intent_name == "ForDay":
-        day = intent.get('slots',DEFAULT_DAY_SLOTS) \
-        .get('day', DEFAULT_VALUES) \
-        .get('value', DEFAULT_VALUE).lower()
-        if not day in DAYS_OF_WEEK:
-            return get_help_response()
-        return build_pray_response(MYSTERIES_MAP[day])
+        if dialogState != 'COMPLETED':
+            return get_delegate_response()
+        else:
+            day = intent.get('slots',DEFAULT_DAY_SLOTS) \
+                        .get('day', DEFAULT_VALUES) \
+                        .get('value', DEFAULT_VALUE).lower()
+            if not day in DAYS_OF_WEEK:
+                return bad_day_of_week_input(day)
+            return build_pray_response(MYSTERIES_MAP[day])
     elif intent_name == "ForMysteries":
-        mysteries = intent.get('slots',DEFAULT_MYSTERIES_SLOTS) \
-        .get('mysteries', DEFAULT_VALUES) \
-        .get('value',DEFAULT_VALUE).lower().encode('utf8')
-        if not mysteries in MYSTERIES:
-            return bad_mysteries_input(mysteries)
-        return build_pray_response(mysteries)
+        if dialogState != 'COMPLETED':
+            return get_delegate_response()
+        else:
+            mysteries = intent.get('slots',DEFAULT_MYSTERIES_SLOTS) \
+                              .get('mysteries', DEFAULT_VALUES) \
+                              .get('value',DEFAULT_VALUE).lower().encode('utf8')
+            if not mysteries in MYSTERIES:
+                return bad_mysteries_input(mysteries)
+            return build_pray_response(mysteries)
     elif intent_name == "AMAZON.ResumeIntent":
         token=context['AudioPlayer']['token']
         return play_current(token, context['AudioPlayer']['offsetInMilliseconds'])
@@ -355,6 +385,15 @@ def play_next(token, playBehavior, expectedPrevious):
 
 def on_next_command(play_request, context):
     print("Advancing")
+    apContext = context['AudioPlayer']
+    for x in apContext:
+        print (x)
+        print (apContext[x])
+        
+    for y in context:
+        print (y)
+   
+        
     token = context['AudioPlayer']['token']
     return play_next(token, 'REPLACE_ALL', None)
 
