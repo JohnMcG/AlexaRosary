@@ -90,23 +90,28 @@ def not_supported():
         'Rosary', 'Operation not supported', '', 'Operation not supported',
         True, []))
 
-def bad_day_of_week_input(day):
-    message = day + ' is not a day of the week. Please say a day of the week.'
-    return build_response({}, build_speechlet_response(
-        APP_TITLE, message, message, message, False, [{
+def bad_day_of_week_input(day, dialogState):
+    directives = []
+    if dialogState != 'UNDEFINED':
+        directives = [{
                     'type': 'Dialog.ElicitSlot',
                     'slotToElicit': 'day'
-                }]))
+                }]
+    message = day + ' is not a day of the week. Please say a day of the week.'
+    return build_response({}, build_speechlet_response(
+        APP_TITLE, message, message, message, False, directives))
 
 def bad_mysteries_input(mysteries):    
+    directives = []
+    if dialogState != 'UNDEFINED':
+        directives = [{
+                    'type': 'Dialog.ElicitSlot',
+                    'slotToElicit': 'mysteries'
+                }]
     message = mysteries + (" is not a set of mysteries of the Rosary. " 
                            "Please say Joyful, Sorrowful, Glorious, or Luminous.")
     return build_response({}, build_speechlet_response(
-        APP_TITLE, message, message, message, False,
-                [{
-                    'type': 'Dialog.ElicitSlot',
-                    'slotToElicit': 'mysteries'
-                }]))
+        APP_TITLE, message, message, message, False, directives))
                           
 
 def start_over(token):
@@ -270,7 +275,7 @@ def on_intent(intent_request, session, context):
 
     print("intent: " + intent_name)
 
-    dialogState = intent_request['dialogState']
+    dialogState = intent_request.get('dialogState', 'UNDEFINED');
     print('Dialog state is ' + dialogState)
     
         
@@ -284,24 +289,24 @@ def on_intent(intent_request, session, context):
     elif intent_name == 'AMAZON.HelpIntent' or intent_name == 'Help':
         return get_help_response()
     elif intent_name == "ForDay":
-        if dialogState != 'COMPLETED':
+        if dialogState != 'COMPLETED' and dialogState != 'UNDEFINED':
             return get_delegate_response()
         else:
             day = intent.get('slots',DEFAULT_DAY_SLOTS) \
                         .get('day', DEFAULT_VALUES) \
                         .get('value', DEFAULT_VALUE).lower()
             if not day in DAYS_OF_WEEK:
-                return bad_day_of_week_input(day)
+                return bad_day_of_week_input(day, dialogState)
             return build_pray_response(MYSTERIES_MAP[day])
     elif intent_name == "ForMysteries":
-        if dialogState != 'COMPLETED':
+        if dialogState != 'COMPLETED' and dialogState != 'UNDEFINED':
             return get_delegate_response()
         else:
             mysteries = intent.get('slots',DEFAULT_MYSTERIES_SLOTS) \
                               .get('mysteries', DEFAULT_VALUES) \
                               .get('value',DEFAULT_VALUE).lower().encode('utf8')
             if not mysteries in MYSTERIES:
-                return bad_mysteries_input(mysteries)
+                return bad_mysteries_input(mysteries, dialogState)
             return build_pray_response(mysteries)
     elif intent_name == "AMAZON.ResumeIntent":
         token=context['AudioPlayer']['token']
