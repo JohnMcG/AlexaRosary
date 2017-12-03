@@ -101,7 +101,7 @@ def bad_day_of_week_input(day, dialogState):
     return build_response({}, build_speechlet_response(
         APP_TITLE, message, message, message, False, directives))
 
-def bad_mysteries_input(mysteries):    
+def bad_mysteries_input(mysteries, dialogState):    
     directives = []
     if dialogState != 'UNDEFINED':
         directives = [{
