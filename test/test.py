@@ -206,15 +206,17 @@ class TestDivineMercy(unittest.TestCase):
       return currentData
 
    """
-   The Ending is the Holy God and the Sign of the Cross
+   The Ending is 3 of the Holy God and the Sign of the Cross
    the Sign Of the Cross
    """
    def _testEnding(self, currentData):
-      expected = DivineMercyTokenData('Holy God',5,0)
-      self.assertEqual(expected, currentData)
-
+      for i in range(0,3):
+         expected = DivineMercyTokenData('Holy God',5,i)
+         self.assertEqual(expected, currentData)
+         currentData = currentData.get_next()
+      
+      expected.counter = 0
       expected.prayer = 'SignOfTheCross'
-      currentData = currentData.get_next()
       self.assertEqual(expected, currentData)
 
       currentData = currentData.get_next()

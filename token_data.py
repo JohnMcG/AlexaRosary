@@ -159,11 +159,11 @@ class DivineMercyTokenData(TokenData):
         elif self.prayer == 'Hail Mary':
             prayer='Creed'
 
-        if self.prayer == 'Creed':
+        elif self.prayer == 'Creed':
             decade += 1
             prayer ='Eternal Father'
 
-        if self.prayer == 'Eternal Father':
+        elif self.prayer == 'Eternal Father':
             prayer = 'For the sake'
 
 
@@ -171,12 +171,16 @@ class DivineMercyTokenData(TokenData):
             if (counter >= 10):
                 if (decade >= 5):
                     prayer='Holy God'
+                    counter = 0
                 else:
                     decade += 1
                     prayer='Eternal Father'
             
-        if self.prayer == 'Holy God':
-            prayer='SignOfTheCross'
+        elif self.prayer == 'Holy God':
+            if (counter < 3):
+                prayer = 'Holy God'
+            else:
+                prayer='SignOfTheCross'
 
         if prayer != self.prayer:
             counter=0
