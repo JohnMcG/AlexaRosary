@@ -84,7 +84,7 @@ def get_farewell_response():
 
 def get_help_response():
     return build_response({}, build_speechlet_response(
-        APP_TITLE, HELP_TEXT, HELP_REPROMPT, HELP_TEXT, False, []))
+        APP_TITLE, HELP_TEXT + " " + HELP_REPROMPT, HELP_REPROMPT, HELP_TEXT, False, []))
 
 def not_supported():
     return build_response({}, build_speechlet_response(
@@ -265,8 +265,8 @@ def on_launch(launch_request, session):
     return get_welcome_response()
 
 
-def on_can_fulfill_intent(can_fulfill_request):
-    print ("on_can_fulfill_intent reqiestId=" can_fulfill_request['requestId'] +
+def on_can_fulfill_intent(can_fulfill_request): 
+    print ("on_can_fulfill_intent reqiestId=" +can_fulfill_request['requestId'] +
            ". sessionId=" + session['sessionId'])
 
     intent = intent_request['intent']
@@ -517,5 +517,5 @@ def lambda_handler(event, context):
     elif event['request']['type'] == "System.ExceptionEncountered":
         handle_exception(event['request'])
     elif event['request']['type'] == "CanFulfillIntentRequest":
-        retrun on_can_fulfill_intent(event['request'])
+        return on_can_fulfill_intent(event['request'])
 
