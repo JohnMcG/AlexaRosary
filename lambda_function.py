@@ -27,7 +27,8 @@ MYSTERIES_MAP = {
 SMALL_IMAGE_URL='https://s3.amazonaws.com/rosary-files/img/rosary_small.jpg'
 LARGE_IMAGE_URL='https://s3.amazonaws.com/rosary-files/img/rosary_large.jpg'
 IMAGE_CREDIT = 'By FotoKatolik from Polska (Rozaniec) [CC BY-SA 2.0 (http://creativecommons.org/licenses/by-sa/2.0)], via Wikimedia Commons\r\n\r\n'
-HELP_TEXT = 'You can say Divine Mercy Chaplet, Rosary, or request the Joyful, Sorrowful, Glorious, or Luminous Mysteries. What would you like me to pray with you?'
+HELP_TEXT = 'You can say Divine Mercy Chaplet, Rosary, or request the Joyful, Sorrowful, Glorious, or Luminous Mysteries.' 
+HELP_REPROMPT = 'What would you like me to pray with you?'
 DEFAULT_MYSTERIES_SLOTS = { 'mysteries': ''}
 DEFAULT_DAY_SLOTS = {'day' : {'value': ''}}
 DEFAULT_VALUES = {'value' : '' }
@@ -83,7 +84,7 @@ def get_farewell_response():
 
 def get_help_response():
     return build_response({}, build_speechlet_response(
-        APP_TITLE, HELP_TEXT, '', HELP_TEXT, False, []))
+        APP_TITLE, HELP_TEXT, HELP_REPROMPT, HELP_TEXT, False, []))
 
 def not_supported():
     return build_response({}, build_speechlet_response(
@@ -264,6 +265,15 @@ def on_launch(launch_request, session):
     return get_welcome_response()
 
 
+def on_can_fulfill_intent(can_fulfill_request):
+    print ("on_can_fulfill_intent reqiestId=" can_fulfill_request['requestId'] +
+           ". sessionId=" + session['sessionId'])
+
+    intent = intent_request['intent']
+    intent_name = intent_request['intent']['name']
+
+    print("intent: " + intent_name)
+    
 def on_intent(intent_request, session, context):
     """ Called when the user specifies an intent for this skill """
 
@@ -386,7 +396,7 @@ def play_next(token, playBehavior, expectedPrevious):
        }
     else:
         print ("Finishing")
-        return build_empty_response();
+        return build_empty_response()
 
 def on_next_command(play_request, context):
     print("Advancing")
@@ -471,7 +481,7 @@ def lambda_handler(event, context):
 
 
     print("Processing event: " + event['request']['requestId']
-          + ": " + event['request']['type']);
+          + ": " + event['request']['type'])
 
     default_context = { 'AudioPlayer':
                 {
@@ -506,4 +516,6 @@ def lambda_handler(event, context):
         return on_previous_command(event['request'], context)
     elif event['request']['type'] == "System.ExceptionEncountered":
         handle_exception(event['request'])
+    elif event['request']['type'] == "CanFulfillIntentRequest":
+        retrun on_can_fulfill_intent(event['request'])
 
