@@ -7,7 +7,7 @@ by John McGuinness, 2017
 from __future__ import print_function
 import struct
 import os
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 
 AUDIO_HOST=os.environ['AUDIO_HOST']
 
@@ -28,14 +28,13 @@ AUDIO_MAPPING={
 
 FORMAT='15p15p20pll'
 
-class TokenData(object):
+class TokenData(ABC):
     prayer_type='Rosary'
     mysteries='joyful'
     prayer='Creed'
     decade=0
     counter=0
 
-    __metaclass__ = ABCMeta
     
     def do_print(self):
         return (self.prayer_type + ":" + self.mysteries + ":" + str(self.decade) + ":" + self.prayer + ":" + str(self.counter))
@@ -50,11 +49,13 @@ class TokenData(object):
     @classmethod
     def from_token(self, token):
         parts = struct.unpack(FORMAT,token)
-        type  = parts[0];
+        type  = parts[0].decode('utf-8');
+        decoded_mysteries = parts[1].decode('utf-8')
+        decoded_prayer = parts[2].decode('utf-8')
         if (type == 'Rosary'):
-            return RosaryTokenData(parts[1],parts[2],parts[3],parts[4])
+            return RosaryTokenData(decoded_mysteries,decoded_prayer,parts[3],parts[4])
         elif (type == 'Divine Mercy'):
-            return DivineMercyTokenData(parts[2],parts[3],parts[4])
+            return DivineMercyTokenData(decoded_prayer,parts[3],parts[4])
         else:
             raise NotImplementedError('Bad prayer type:' + type)
         
@@ -65,9 +66,9 @@ class TokenData(object):
             return AUDIO_MAPPING[self.prayer]
 
     def get_token(self):
-        return struct.pack(FORMAT, self.prayer_type,
-                           self.mysteries,
-                           self.prayer,
+        return struct.pack(FORMAT, bytes(self.prayer_type, 'utf-8'),
+                           bytes(self.mysteries, 'utf-8'),
+                           bytes(self.prayer, 'utf-8'),
                            self.decade,
                            self.counter)
 

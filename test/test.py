@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 """
 Test class for token data class
 
@@ -21,11 +21,11 @@ class TestBaseClass(unittest.TestCase):
        currentData = RosaryTokenData('Joyful','SignOfTheCross',0,0)
        currentData.prayer_type='XYX'
        token = currentData.get_token()
-       with self.assertRaisesRegexp(NotImplementedError, 'Bad prayer type') as context:
+       with self.assertRaisesRegex(NotImplementedError, 'Bad prayer type') as context:
           newData = currentData.from_token(token)
 
    def testCannotDirectlyIntantiateBaseClass(self):
-      with self.assertRaisesRegexp(TypeError, 'instantiate abstract class') as context:
+      with self.assertRaisesRegex(TypeError, 'instantiate abstract class') as context:
          currentData = TokenData('Rosary','Joyful','SignOfTheCross',0,0)
    
 
