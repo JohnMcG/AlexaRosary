@@ -475,7 +475,7 @@ def lambda_handler(event, context):
     etc.) The JSON body of the request is provided in the event parameter.
     """
 
-    if (event.has_key('session') and event['session']['application']['applicationId'] !=
+    if ('session' in event and event['session']['application']['applicationId'] !=
              "amzn1.ask.skill.43e06ff9-fe37-4785-ad97-76508f4a2896"):
          raise ValueError("Invalid Application ID")
 
